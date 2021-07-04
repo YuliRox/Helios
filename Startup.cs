@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -38,6 +38,13 @@ namespace Helios
                         Configuration["Mqtt:Server"],
                         Configuration.GetValue<int>("Mqtt:Port", 1883)
                     );
+            }, (heliosOptions) =>
+            {
+                heliosOptions.HeliosListenTopic = Configuration["Mqtt:Topics:Listen"];
+                heliosOptions.DimmerOnOffStatusTopic = Configuration["Mqtt:Topics:DimmerOnOffStatus"];
+                heliosOptions.DimmerOnOffCommandTopic = Configuration["Mqtt:Topics:DimmerOnOffCommand"];
+                heliosOptions.DimmerPercentageStatusTopic = Configuration["Mqtt:Topics:DimmerPercentageStatus"];
+                heliosOptions.DimmerPercentageCommandTopic = Configuration["Mqtt:Topics:DimmerPercentageCommand"];
             });
         }
 

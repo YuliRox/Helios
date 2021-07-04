@@ -8,9 +8,13 @@ namespace Helios.Extensions
 {
     public static class ServiceCollectionExtension
     {
-        public static IServiceCollection AddMqttClientServiceWithConfig(this IServiceCollection services, Action<MqttClientOptionsBuilder> configure)
+        public static IServiceCollection AddMqttClientServiceWithConfig(
+            this IServiceCollection services,
+            Action<MqttClientOptionsBuilder> configure,
+            Action<HeliosOptions> configureOptions
+        )
         {
-            services.AddSingleton<IMqttClientOptions>(serviceProvider =>
+            services.AddSingleton<IMqttClientOptions>(_ =>
             {
                 var optionsBuilder = new MqttClientOptionsBuilder();
 
@@ -18,6 +22,15 @@ namespace Helios.Extensions
 
                 return optionsBuilder.Build();
             });
+            services.AddSingleton<HeliosOptions>(_ =>
+                {
+                    var options = new HeliosOptions();
+
+                    configureOptions(options);
+
+                    return options;
+                }
+            );
             services.AddSingleton<MqttClientService>();
             services.AddSingleton<IHostedService>(serviceProvider =>
             {
