@@ -1,5 +1,3 @@
-
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Helios
@@ -11,6 +9,7 @@ namespace Helios
         public string DimmerOnOffCommandTopic { get; set; }
         public string DimmerPercentageStatusTopic { get; set; }
         public string DimmerPercentageCommandTopic { get; set; }
+        public int DimmerMinimumPercentage { get; set; }
 
         public IEnumerable<string> ListenTopics
         {

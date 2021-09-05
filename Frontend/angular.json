@@ -1,0 +1,111 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "HeliosClient": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        },
+        "@schematics/angular:application": {
+          "strict": true
+        }
+      },
+      "root": "projects/helios-client",
+      "sourceRoot": "projects/helios-client/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/HeliosClient",
+            "index": "projects/helios-client/src/index.html",
+            "main": "projects/helios-client/src/main.ts",
+            "polyfills": "projects/helios-client/src/polyfills.ts",
+            "tsConfig": "projects/helios-client/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              "projects/helios-client/src/favicon.ico",
+              "projects/helios-client/src/assets"
+            ],
+            "styles": [
+              "projects/helios-client/src/styles.scss"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kb",
+                  "maximumError": "1mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kb",
+                  "maximumError": "4kb"
+                }
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "projects/helios-client/src/environments/environment.ts",
+                  "with": "projects/helios-client/src/environments/environment.prod.ts"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "browserTarget": "HeliosClient:build:production"
+            },
+            "development": {
+              "browserTarget": "HeliosClient:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "HeliosClient:build"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/helios-client/src/test.ts",
+            "polyfills": "projects/helios-client/src/polyfills.ts",
+            "tsConfig": "projects/helios-client/tsconfig.spec.json",
+            "karmaConfig": "projects/helios-client/karma.conf.js",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              "projects/helios-client/src/favicon.ico",
+              "projects/helios-client/src/assets"
+            ],
+            "styles": [
+              "projects/helios-client/src/styles.scss"
+            ],
+            "scripts": []
+          }
+        }
+      }
+    }
+  },
+  "defaultProject": "HeliosClient"
+}

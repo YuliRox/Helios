@@ -18,11 +18,16 @@ namespace Helios
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host
                 .CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((HostingAbstractionsHostExtensions, config) => {
+                .ConfigureAppConfiguration((HostingAbstractionsHostExtensions, config) =>
+                {
                     config.AddEnvironmentVariables(prefix: "HELIOS_");
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    /*webBuilder.ConfigureKestrel(options =>
+                    {
+                        options.ListenLocalhost(5200);
+                    });*/
                     webBuilder.UseStartup<Startup>();
                 });
     }
