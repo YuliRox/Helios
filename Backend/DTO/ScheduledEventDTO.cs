@@ -7,6 +7,5 @@ namespace Helios.DTO{
         public Weekday Weekday {get; set;}
         public DateTime Start {get; set;}
         public DateTime End {get; set;}
-
     }
 }

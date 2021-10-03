@@ -70,10 +70,11 @@ namespace Helios
                 q.SchedulerName = "Job Scheduler";
                 q.UseMicrosoftDependencyInjectionScopedJobFactory();
 
-                q.AddJob<WakeUpJob>(j => j
+                /*q.AddJob<WakeUpJob>(j => j
                     .WithIdentity("wakeUp")
-                );
+                );*/
 
+                q.AddJobAndTrigger<WakeUpJobV2>(Configuration);
                 /*q.AddTrigger(t =>
                     t.WithIdentity("wakeUp")
                     .ForJob("wakeUp")
@@ -84,11 +85,14 @@ namespace Helios
                     )
                 );*/
 
-                q.AddTrigger(t =>
+                /*q.AddTrigger(t =>
                     t.WithIdentity("wakeUp")
                     .ForJob("wakeUp")
                     .StartNow()
                 );
+                */
+
+                q.UseInMemoryStore();
             });
 
             services.AddQuartzServer(options =>
