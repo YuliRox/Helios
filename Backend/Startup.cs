@@ -50,7 +50,9 @@ namespace Helios
                     .WithTcpServer(
                         Configuration["Mqtt:Server"],
                         Configuration.GetValue<int>("Mqtt:Port", 1883)
-                    );
+                    )
+                    .WithKeepAlivePeriod(TimeSpan.FromMinutes(10))
+                    ;
             }, (heliosOptions) =>
             {
                 heliosOptions.HeliosListenTopic = Configuration["Mqtt:Topics:Listen"];
