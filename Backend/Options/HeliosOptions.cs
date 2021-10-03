@@ -10,24 +10,29 @@ namespace Helios
         public string DimmerPercentageStatusTopic { get; set; }
         public string DimmerPercentageCommandTopic { get; set; }
         public int DimmerMinimumPercentage { get; set; }
+        public int DimmerTime { get; set; }
 
         public IEnumerable<string> ListenTopics
         {
             get
             {
-                yield return this.HeliosListenTopic;
-                yield return this.DimmerOnOffStatusTopic;
-                yield return this.DimmerPercentageStatusTopic;
+                if (this.HeliosListenTopic != null)
+                    yield return this.HeliosListenTopic;
+                if (this.DimmerOnOffStatusTopic != null)
+                    yield return this.DimmerOnOffStatusTopic;
+                if (this.DimmerPercentageStatusTopic != null)
+                    yield return this.DimmerPercentageStatusTopic;
             }
         }
-
 
         public IEnumerable<string> CommandTopics
         {
             get
             {
-                yield return this.DimmerOnOffCommandTopic;
-                yield return this.DimmerPercentageCommandTopic;
+                if (this.DimmerOnOffCommandTopic != null)
+                    yield return this.DimmerOnOffCommandTopic;
+                if (this.DimmerPercentageCommandTopic != null)
+                    yield return this.DimmerPercentageCommandTopic;
             }
         }
     }

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Helios
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
@@ -18,10 +18,8 @@ namespace Helios
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host
                 .CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((HostingAbstractionsHostExtensions, config) =>
-                {
-                    config.AddEnvironmentVariables(prefix: "HELIOS_");
-                })
+                .ConfigureAppConfiguration((_, config) =>
+                    config.AddEnvironmentVariables(prefix: "HELIOS_"))
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     /*webBuilder.ConfigureKestrel(options =>

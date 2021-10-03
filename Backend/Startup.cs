@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 using Helios.Extensions;
@@ -58,6 +58,8 @@ namespace Helios
                 heliosOptions.DimmerOnOffCommandTopic = Configuration["Mqtt:Topics:DimmerOnOffCommand"];
                 heliosOptions.DimmerPercentageStatusTopic = Configuration["Mqtt:Topics:DimmerPercentageStatus"];
                 heliosOptions.DimmerPercentageCommandTopic = Configuration["Mqtt:Topics:DimmerPercentageCommand"];
+                heliosOptions.DimmerMinimumPercentage = Configuration.GetValue<int>("Helios:DimmerMinPercentage", 20);
+                heliosOptions.DimmerTime = Configuration.GetValue<int>("Helio:DimmerTime", 20 * 60 * 1000);
             });
 
             services.AddQuartz(q =>

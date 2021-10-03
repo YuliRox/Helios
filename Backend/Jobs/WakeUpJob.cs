@@ -51,7 +51,6 @@ namespace Helios.Jobs
 
                 var percentage = 20;
                 while(percentage <= 100) {
-
                     await SendPercentage(mqttClient, dimmerPercentageCommandTopic, percentage);
 
                     percentage++;
@@ -60,9 +59,8 @@ namespace Helios.Jobs
 
                 await mqttClient.DisconnectAsync();
             }
-            catch (Exception)
+            catch
             {
-
             }
         }
     }

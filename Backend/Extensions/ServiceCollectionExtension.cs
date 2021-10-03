@@ -31,11 +31,13 @@ namespace Helios.Extensions
                     return options;
                 }
             );
+
             services.AddSingleton<MqttClientService>();
-            services.AddSingleton<IHostedService>(serviceProvider =>
-            {
-                return serviceProvider.GetService<MqttClientService>();
-            });
+
+            services.AddSingleton<IManagedDimmer>(serviceProvider => serviceProvider.GetService<MqttClientService>());
+
+            services.AddSingleton<IHostedService>(serviceProvider => serviceProvider.GetService<MqttClientService>());
+
             services.AddSingleton<MqttClientServiceProvider>(serviceProvider =>
             {
                 var mqttClientService = serviceProvider.GetService<MqttClientService>();
