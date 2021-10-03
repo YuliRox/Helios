@@ -1,19 +1,15 @@
+﻿
 using System;
-using System.IO;
-
 using Helios.Extensions;
 using Helios.Jobs;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.FileProviders;
 
 using Quartz;
-using Microsoft.AspNetCore.Http;
 
 namespace Helios
 {
@@ -34,10 +30,10 @@ namespace Helios
 
             //services.AddControllers();
 
+            services.AddSwaggerGen();
+
             services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "../Frontend/dist";
-            });
+                configuration.RootPath = "../Frontend/dist");
 
             services.AddMqttClientServiceWithConfig((configBuilder) =>
             {
@@ -106,6 +102,9 @@ namespace Helios
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseStaticFiles();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(config => config.SwaggerEndpoint("/swagger/v1/swagger.json", "Helios API v1"));
 
             if (env.IsDevelopment())
             {
