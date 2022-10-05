@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -8,6 +9,7 @@ namespace Helios
     {
         public static void Main(string[] args)
         {
+            Console.WriteLine($"Current Time:{DateTime.Now}|{DateTime.UtcNow}");
             CreateHostBuilder(args)
                 .Build()
                 .Run();
