@@ -1,0 +1,15 @@
+version: '3.7'
+services:
+  helios:
+    container_name: helios
+    image: yulirox-pi:5000/helios:arm64-v1.0
+    restart: always
+    volumes:
+      - /home/ubuntu/Helios/appsettings.Production.json:/app/appsettings.Production.json
+    networks:
+      - mosquitto
+
+networks:
+  mosquitto:
+    external:
+      name: mosquitto
