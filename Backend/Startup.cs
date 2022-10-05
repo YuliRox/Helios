@@ -65,29 +65,7 @@ namespace Helios
                 q.SchedulerId = "JobScheduler";
                 q.SchedulerName = "Job Scheduler";
                 q.UseMicrosoftDependencyInjectionScopedJobFactory();
-
-                /*q.AddJob<WakeUpJob>(j => j
-                    .WithIdentity("wakeUp")
-                );*/
-
                 q.AddJobAndTrigger<WakeUpJobV2>(Configuration);
-                /*q.AddTrigger(t =>
-                    t.WithIdentity("wakeUp")
-                    .ForJob("wakeUp")
-                    .StartAt(new DateTimeOffset(2021, 7, 5, 7, 40, 0, TimeSpan.Zero))
-                    .WithSimpleSchedule(x => x
-                        .WithIntervalInHours(24)
-                        .WithRepeatCount(5)
-                    )
-                );*/
-
-                /*q.AddTrigger(t =>
-                    t.WithIdentity("wakeUp")
-                    .ForJob("wakeUp")
-                    .StartNow()
-                );
-                */
-
                 q.UseInMemoryStore();
             });
 
@@ -128,7 +106,6 @@ namespace Helios
                 spa.Options.SourcePath = "../Frontend";
                 if (env.IsDevelopment())
                 {
-                    //spa.UseAngularCliServer(npmScript: "start");
                     spa.UseProxyToSpaDevelopmentServer("http://localhost:4200");
                 }
             });

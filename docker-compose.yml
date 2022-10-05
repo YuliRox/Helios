@@ -8,6 +8,8 @@ services:
       - /home/ubuntu/Helios/appsettings.Production.json:/app/appsettings.Production.json
     networks:
       - mosquitto
+    ports:
+      - 8090:80
 
 networks:
   mosquitto:

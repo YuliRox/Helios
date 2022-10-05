@@ -32,8 +32,9 @@ namespace Helios.Extensions
                 quartz.AddTrigger(opts => opts
                     .ForJob(jobKey)
                     .WithIdentity(jobName + "-" + triggerName + "-trigger")
-                    .WithCronSchedule(cronSchedule)
-                    );
+                    .WithCronSchedule(cronSchedule,
+                        x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")
+                    )));
             }
         }
     }
