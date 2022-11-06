@@ -6,6 +6,8 @@ using Helios.DTO;
 using Quartz;
 using System.Linq;
 using Quartz.Impl.Matchers;
+using Quartz.Impl.Triggers;
+using Helios.Enum;
 
 namespace Helios.Controllers
 {
@@ -37,14 +39,27 @@ namespace Helios.Controllers
 
             var triggers = await scheduler.GetTriggersOfJob(jobKey);
 
-            var scheduledEvents = new ScheduledEventDTO()
+            var scheduledEvents = triggers.Cast<CronTriggerImpl>().Select(t =>
             {
-                Weekday = Enum.Weekday.Monday,
-                Start = new DateTime(),
-                End = new DateTime()
-            };
+                var (time, weekdays) = CronToType(t.CronExpressionString);
+                return new ScheduledEventDTO()
+                {
+                    TriggerName = t.Name,
+                    //TriggerName = "test",
+                    CronExpression = t.CronExpressionString,
+                    JobType = t.JobName,
+                    //JobType = "test",
+                };
+            }).ToArray();
 
-            return new[] { scheduledEvents };
+
+            return scheduledEvents;
+        }
+
+        private Tuple<TimeOnly, Weekday[]> CronToType(string cronExpressionString)
+        {
+            var time = TimeOnly.ParseExact(cronExpressionString, "ss mm hh");
+            // Todo: Convert Cron Weekdays to Enum list of weekdays
         }
 
         [HttpPost("RunNow")]

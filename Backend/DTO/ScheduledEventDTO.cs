@@ -4,8 +4,10 @@ using Helios.Enum;
 namespace Helios.DTO{
     public class ScheduledEventDTO
     {
-        public Weekday Weekday {get; set;}
-        public DateTime Start {get; set;}
-        public DateTime End {get; set;}
+        public string TriggerName { get; set; }
+        public string CronExpression { get; set; }
+        public string JobType { get; set; }
+        public TimeOnly ActivationTime { get; set; }
+        public Weekday[] DayOfWeek { get; set; }
     }
 }
