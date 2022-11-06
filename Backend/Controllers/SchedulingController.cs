@@ -7,7 +7,7 @@ using Quartz;
 using System.Linq;
 using Quartz.Impl.Matchers;
 using Quartz.Impl.Triggers;
-using Helios.Enum;
+using System.Text.RegularExpressions;
 
 namespace Helios.Controllers
 {
@@ -39,27 +39,52 @@ namespace Helios.Controllers
 
             var triggers = await scheduler.GetTriggersOfJob(jobKey);
 
-            var scheduledEvents = triggers.Cast<CronTriggerImpl>().Select(t =>
+            var scheduledEvents = triggers
+                .Where(x => x is CronTriggerImpl)
+                .Cast<CronTriggerImpl>()
+                .Select(t =>
             {
                 var (time, weekdays) = CronToType(t.CronExpressionString);
                 return new ScheduledEventDTO()
                 {
                     TriggerName = t.Name,
-                    //TriggerName = "test",
-                    CronExpression = t.CronExpressionString,
                     JobType = t.JobName,
-                    //JobType = "test",
+
+                    ActivationTime = time,
+                    DayOfWeek = weekdays,
+
+                    CronExpression = t.CronExpressionString,
                 };
             }).ToArray();
 
+            triggers.Where(x => x is DailyTimeIntervalTriggerImpl)
+                .Cast<DailyTimeIntervalTriggerImpl>()
+                .Select(x => new ScheduledEventDTO()
+                {
+                    TriggerName = x.Name,
+                    JobType = x.JobName,
+
+                    ActivationTime = new TimeOnly(x.StartTimeOfDay.Hour, x.StartTimeOfDay.Minute, x.StartTimeOfDay.Second),
+                    DayOfWeek = x.DaysOfWeek.ToArray()
+                });
 
             return scheduledEvents;
         }
 
-        private Tuple<TimeOnly, Weekday[]> CronToType(string cronExpressionString)
+        private Regex CronEx = new Regex(@"(?<Seconds>\d{2}) (?<Minutes>\d{2}) (?<Hours>\d{2}) ? * (?<WeekDays>.*)", RegexOptions.Compiled);
+
+        private (TimeOnly, DayOfWeek[]) CronToType(string cronExpressionString)
         {
-            var time = TimeOnly.ParseExact(cronExpressionString, "ss mm hh");
-            // Todo: Convert Cron Weekdays to Enum list of weekdays
+            var cronParts = CronEx.Match(cronExpressionString);
+
+            var seconds = int.Parse(cronParts.Groups["Seconds"].Value);
+            var minutes = int.Parse(cronParts.Groups["Minutes"].Value);
+            var hours = int.Parse(cronParts.Groups["Hours"].Value);
+            var time = new TimeOnly(hours, minutes, seconds);
+
+            var weekDays = cronParts.Groups["WeekDays"].Value;
+
+            return (time, new[] { DayOfWeek.Monday });
         }
 
         [HttpPost("RunNow")]
@@ -72,6 +97,28 @@ namespace Helios.Controllers
 
             var jobKey = new JobKey(jobName);
             await scheduler.TriggerJob(jobKey);
+        }
+
+        public async Task CreateTrigger(ScheduledEventDTO scheduledEventDTO)
+        {
+            
+
+            throw new NotImplementedException();
+        }
+
+        public async Task UpdateTrigger(ScheduledEventDTO scheduledEventDTO)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task DeleteTrigger(ScheduledEventDTO scheduledEventDTO)
+        {
+            if (string.IsNullOrWhiteSpace(scheduledEventDTO.TriggerName))
+                throw new ArgumentException("Scheduled Event TriggerName is empty");
+            if (string.IsNullOrWhiteSpace(scheduledEventDTO.JobType))
+                throw new ArgumentException("Scheduled Event TriggerName is empty");
+
+            throw new NotImplementedException();
         }
     }
 }
