@@ -5,8 +5,6 @@ VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Helios", "Backend\Helios.csproj", "{DA60F0EB-C059-4743-9E81-CD5382F6E0A5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Frontend2", "Frontend\Frontend2.csproj", "{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,18 +27,6 @@ Global
 		{DA60F0EB-C059-4743-9E81-CD5382F6E0A5}.Release|x64.Build.0 = Release|Any CPU
 		{DA60F0EB-C059-4743-9E81-CD5382F6E0A5}.Release|x86.ActiveCfg = Release|Any CPU
 		{DA60F0EB-C059-4743-9E81-CD5382F6E0A5}.Release|x86.Build.0 = Release|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Debug|x64.Build.0 = Debug|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Debug|x86.Build.0 = Debug|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Release|x64.ActiveCfg = Release|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Release|x64.Build.0 = Release|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Release|x86.ActiveCfg = Release|Any CPU
-		{FC83CEC3-95E0-474D-8D8A-1F3B4DB60467}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
