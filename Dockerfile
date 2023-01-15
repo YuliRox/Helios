@@ -26,5 +26,4 @@ RUN  dotnet publish "Helios.csproj" --no-build --no-cache -c Release -r linux-$D
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /build/publish .
-#COPY --from=client_build /client-app/dist /usr/share/dotnet/dist
 ENTRYPOINT ["dotnet", "Helios.dll"]

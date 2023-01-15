@@ -6,6 +6,7 @@ services:
     restart: always
     volumes:
       - /home/ubuntu/Helios/appsettings.Production.json:/app/appsettings.Production.json
+      - /home/ubuntu/Helios/helios.db:/app/helios.db
     networks:
       - mosquitto
     ports:

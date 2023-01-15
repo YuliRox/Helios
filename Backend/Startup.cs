@@ -66,7 +66,18 @@ namespace Helios
                 q.SchedulerName = "Job Scheduler";
                 q.UseMicrosoftDependencyInjectionScopedJobFactory();
                 q.AddJobAndTrigger<WakeUpJobV2>(Configuration);
-                q.UseInMemoryStore();
+                q.UsePersistentStore(store =>
+                {
+                    store.UseProperties = true;
+                    store.RetryInterval = TimeSpan.FromSeconds(15);
+                    store.UseJsonSerializer();
+                    store.UseSQLite(sqlite =>
+                    {
+                        sqlite.ConnectionString = Configuration.GetConnectionString("HeliosDb");
+                        sqlite.TablePrefix = "QRTZ_";
+                    });
+
+                });
             });
 
             services.AddQuartzServer(options =>
