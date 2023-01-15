@@ -1,3 +1,4 @@
+using Helios.Data;
 using Helios.Extensions;
 using Helios.Jobs;
 using Microsoft.AspNetCore.Components;
@@ -46,7 +47,7 @@ builder.Services.AddQuartz(q =>
 {
     q.SchedulerId = "JobScheduler";
     q.SchedulerName = "Job Scheduler";
-    q.UseMicrosoftDependencyInjectionScopedJobFactory();
+    q.UseMicrosoftDependencyInjectionJobFactory();
     q.AddJobAndTrigger<WakeUpJobV2>(Configuration);
     q.UsePersistentStore(store =>
     {
@@ -68,6 +69,8 @@ builder.Services.AddQuartzServer(options =>
     options.WaitForJobsToComplete = true;
 });
 
+builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddSingleton<ScheduledEventService>();
 
 var app = builder.Build();
 
@@ -77,6 +80,10 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+}
+else
+{
+    app.UseDeveloperExceptionPage();
 }
 
 app.UseHttpsRedirection();
