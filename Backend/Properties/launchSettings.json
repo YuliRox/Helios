@@ -2,7 +2,7 @@
   "profiles": {
     "Helios": {
       "commandName": "Project",
-      "dotnetRunMessages": "true",
+      "dotnetRunMessages": true,
       "launchBrowser": false,
       "applicationUrl": "http://localhost:5200;https://localhost:5201",
       "environmentVariables": {

@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Helios.DTO;
 using Quartz;
 using System.Linq;
 using Quartz.Impl.Matchers;
 using Quartz.Impl.Triggers;
 using System.Text.RegularExpressions;
+using Helios.Data;
 
 namespace Helios.Controllers
 {
@@ -24,18 +24,18 @@ namespace Helios.Controllers
 
         // GET: api/Scheduling
         [HttpGet("GetScheduledEvents")]
-        public async Task<IEnumerable<ScheduledEventDTO>> GetScheduledEvents()
+        public async Task<IEnumerable<ScheduledEvent>> GetScheduledEvents()
         {
             var schedulers = await SchedulerFactory.GetAllSchedulers();
             var scheduler = schedulers.FirstOrDefault();
             if (scheduler == null)
-                return Enumerable.Empty<ScheduledEventDTO>();
+                return Enumerable.Empty<ScheduledEvent>();
 
             //var groups = await scheduler.GetJobGroupNames();
             var keys = await scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup());
             var jobKey = keys.FirstOrDefault();
             if (jobKey == null)
-                return Enumerable.Empty<ScheduledEventDTO>();
+                return Enumerable.Empty<ScheduledEvent>();
 
             var triggers = await scheduler.GetTriggersOfJob(jobKey);
 
@@ -45,7 +45,7 @@ namespace Helios.Controllers
                 .Select(t =>
             {
                 var (time, weekdays) = CronToType(t.CronExpressionString);
-                return new ScheduledEventDTO()
+                return new ScheduledEvent()
                 {
                     TriggerName = t.Name,
                     JobType = t.JobName,
@@ -59,7 +59,7 @@ namespace Helios.Controllers
 
             triggers.Where(x => x is DailyTimeIntervalTriggerImpl)
                 .Cast<DailyTimeIntervalTriggerImpl>()
-                .Select(x => new ScheduledEventDTO()
+                .Select(x => new ScheduledEvent()
                 {
                     TriggerName = x.Name,
                     JobType = x.JobName,
@@ -99,19 +99,19 @@ namespace Helios.Controllers
             await scheduler.TriggerJob(jobKey);
         }
 
-        public async Task CreateTrigger(ScheduledEventDTO scheduledEventDTO)
+        public async Task CreateTrigger(ScheduledEvent scheduledEventDTO)
         {
             
 
             throw new NotImplementedException();
         }
 
-        public async Task UpdateTrigger(ScheduledEventDTO scheduledEventDTO)
+        public async Task UpdateTrigger(ScheduledEvent scheduledEventDTO)
         {
             throw new NotImplementedException();
         }
 
-        public async Task DeleteTrigger(ScheduledEventDTO scheduledEventDTO)
+        public async Task DeleteTrigger(ScheduledEvent scheduledEventDTO)
         {
             if (string.IsNullOrWhiteSpace(scheduledEventDTO.TriggerName))
                 throw new ArgumentException("Scheduled Event TriggerName is empty");

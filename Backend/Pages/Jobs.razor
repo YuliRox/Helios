@@ -1,0 +1,43 @@
+﻿@page "/jobs"
+@using Helios.Data
+@inject ScheduledEventService ScheduledEventService
+
+<PageTitle>Job Management</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Job Management</MudText>
+
+@if (scheduledEvents == null)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="scheduledEvents" Hover="true" SortLabel="Sort By" Elevation="0">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ScheduledEvent, object>(x=>x.ActivationTime)">ActivationTime</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ScheduledEvent, object>(x=>x.TriggerName)">TriggerName</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ScheduledEvent, object>(x=>x.JobType)">JobType</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ScheduledEvent, object>(x=>x.CronExpression)">Cron Expression</MudTableSortLabel></MudTh>
+            <MudTh>Day of Week</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Activation Time">@context.ActivationTime</MudTd>
+            <MudTd DataLabel="TriggerName">@context.TriggerName</MudTd>
+            <MudTd DataLabel="JobType">@context.JobType</MudTd>
+            <MudTd DataLabel="CronExpression">@context.CronExpression</MudTd>
+            <MudTd DataLabel="Day of Week">@string.Join(", ", @context.DayOfWeek)</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[]{50, 100}" />
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    private ScheduledEvent[]? scheduledEvents;
+
+    protected override async Task OnInitializedAsync()
+    {
+        scheduledEvents = await ScheduledEventService.GetScheduledAsync();
+    }
+}
