@@ -31,6 +31,7 @@ public static class ServiceCollectionQuartzConfiguratorExtensions
         foreach (var jobConfig in quartzConfig)
         {
             var triggerName = jobConfig.GetValue("Name", "Default");
+            var triggerGroupName = triggerName ?? "Default";
             var cronSchedule = jobConfig.GetValue<string>("On");
             var cronScheduleOff = jobConfig.GetValue<string>("Off");
 
@@ -42,7 +43,7 @@ public static class ServiceCollectionQuartzConfiguratorExtensions
 
             quartz.AddTrigger(opts => opts
                 .ForJob(jobKey)
-                .WithIdentity(jobName + "-" + triggerName + "-trigger")
+                .WithIdentity(triggerName + "-On", triggerGroupName)
                 .WithCronSchedule(cronSchedule,
                     x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")
                 )));
@@ -50,7 +51,7 @@ public static class ServiceCollectionQuartzConfiguratorExtensions
             if (!string.IsNullOrEmpty(cronScheduleOff))
             {
                 quartz.AddTrigger(opts => opts.ForJob(jobKeyOff)
-                    .WithIdentity(jobNameOff + "-" + triggerName + "-trigger")
+                    .WithIdentity(triggerName + "-Off", triggerGroupName)
                     .WithCronSchedule(cronScheduleOff,
                         x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")
                     )));

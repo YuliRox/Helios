@@ -47,13 +47,12 @@ public class SchedulingController : ControllerBase
             var (time, weekdays) = CronToType(t.CronExpressionString);
             return new ScheduledEvent()
             {
-                TriggerName = t.Name,
-                JobType = t.JobName,
+                GroupName = t.Name,
 
                 ActivationTime = time,
                 DayOfWeek = weekdays,
 
-                CronExpression = t.CronExpressionString,
+                CronExpressionOn = t.CronExpressionString,
             };
         }).ToArray();
 
@@ -61,8 +60,7 @@ public class SchedulingController : ControllerBase
             .Cast<DailyTimeIntervalTriggerImpl>()
             .Select(x => new ScheduledEvent()
             {
-                TriggerName = x.Name,
-                JobType = x.JobName,
+                GroupName = x.Name,
 
                 ActivationTime = new TimeOnly(x.StartTimeOfDay.Hour, x.StartTimeOfDay.Minute, x.StartTimeOfDay.Second),
                 DayOfWeek = x.DaysOfWeek.ToArray()
@@ -113,9 +111,7 @@ public class SchedulingController : ControllerBase
 
     public async Task DeleteTrigger(ScheduledEvent scheduledEventDTO)
     {
-        if (string.IsNullOrWhiteSpace(scheduledEventDTO.TriggerName))
-            throw new ArgumentException("Scheduled Event TriggerName is empty");
-        if (string.IsNullOrWhiteSpace(scheduledEventDTO.JobType))
+        if (string.IsNullOrWhiteSpace(scheduledEventDTO.GroupName))
             throw new ArgumentException("Scheduled Event TriggerName is empty");
 
         throw new NotImplementedException();
