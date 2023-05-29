@@ -34,11 +34,12 @@ public class ScheduledEventService
 
         //var groups = await scheduler.GetJobGroupNames();
         var keys = await scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup());
-        var jobKey = keys.FirstOrDefault();
-        if (jobKey == null)
+        if (keys == null || !keys.Any())
             return Array.Empty<ScheduledEvent>();
 
-        var triggers = await scheduler.GetTriggersOfJob(jobKey);
+        var triggersTasks = keys.Select( jobKey => scheduler.GetTriggersOfJob(jobKey));
+
+        var triggers = (await Task.WhenAll(triggersTasks)).SelectMany(x => x);
 
         var scheduledEvents = triggers
             .Where(x => x is CronTriggerImpl)
