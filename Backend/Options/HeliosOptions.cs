@@ -1,39 +1,38 @@
 using System.Collections.Generic;
 
-namespace Helios
+namespace Helios;
+
+public class HeliosOptions
 {
-    public class HeliosOptions
+    public string HeliosListenTopic { get; set; }
+    public string DimmerOnOffStatusTopic { get; set; }
+    public string DimmerOnOffCommandTopic { get; set; }
+    public string DimmerPercentageStatusTopic { get; set; }
+    public string DimmerPercentageCommandTopic { get; set; }
+    public int DimmerMinimumPercentage { get; set; }
+    public int DimmerTime { get; set; }
+
+    public IEnumerable<string> ListenTopics
     {
-        public string HeliosListenTopic { get; set; }
-        public string DimmerOnOffStatusTopic { get; set; }
-        public string DimmerOnOffCommandTopic { get; set; }
-        public string DimmerPercentageStatusTopic { get; set; }
-        public string DimmerPercentageCommandTopic { get; set; }
-        public int DimmerMinimumPercentage { get; set; }
-        public int DimmerTime { get; set; }
-
-        public IEnumerable<string> ListenTopics
+        get
         {
-            get
-            {
-                if (this.HeliosListenTopic != null)
-                    yield return this.HeliosListenTopic;
-                if (this.DimmerOnOffStatusTopic != null)
-                    yield return this.DimmerOnOffStatusTopic;
-                if (this.DimmerPercentageStatusTopic != null)
-                    yield return this.DimmerPercentageStatusTopic;
-            }
+            if (HeliosListenTopic != null)
+                yield return HeliosListenTopic;
+            if (DimmerOnOffStatusTopic != null)
+                yield return DimmerOnOffStatusTopic;
+            if (DimmerPercentageStatusTopic != null)
+                yield return DimmerPercentageStatusTopic;
         }
+    }
 
-        public IEnumerable<string> CommandTopics
+    public IEnumerable<string> CommandTopics
+    {
+        get
         {
-            get
-            {
-                if (this.DimmerOnOffCommandTopic != null)
-                    yield return this.DimmerOnOffCommandTopic;
-                if (this.DimmerPercentageCommandTopic != null)
-                    yield return this.DimmerPercentageCommandTopic;
-            }
+            if (DimmerOnOffCommandTopic != null)
+                yield return DimmerOnOffCommandTopic;
+            if (DimmerPercentageCommandTopic != null)
+                yield return DimmerPercentageCommandTopic;
         }
     }
 }

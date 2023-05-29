@@ -1,159 +1,153 @@
 using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Options;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Text;
-using Microsoft.Extensions.Logging;
 
-namespace Helios.Services
+namespace Helios.Services;
+
+public interface IManagedDimmer
 {
-    public interface IManagedDimmer
+    Task TurnOn();
+    Task TurnOff();
+    Task<string> SetPercentage(int percentage);
+}
+
+public class MqttClientService : IMqttClientService, IManagedDimmer, IDisposable
+{
+    private readonly ILogger<MqttClientService> _logger;
+    private readonly HeliosOptions _heliosOptions;
+    private readonly IMqttClient _mqttClient;
+    private readonly MqttClientOptions _mqttOptions;
+    private bool _shouldReconnect = true;
+
+    public MqttClientService(HeliosOptions config, MqttClientOptions options, ILogger<MqttClientService> logger)
     {
-        Task TurnOn();
-        Task TurnOff();
-        Task<string> SetPercentage(int percentage);
+        _logger = logger;
+        _mqttOptions = options;
+        _heliosOptions = config;
+        _mqttClient = new MqttFactory()
+            .CreateMqttClient();
+
+        ConfigureMqttClient();
     }
 
-    public class MqttClientService : IMqttClientService, IManagedDimmer
+    private void ConfigureMqttClient()
     {
-        private readonly ILogger<MqttClientService> _logger;
-        private readonly HeliosOptions _heliosOptions;
-        private readonly IMqttClient _mqttClient;
-        private readonly IMqttClientOptions _mqttOptions;
-        private bool _shouldReconnect = true;
+        _mqttClient.ConnectedAsync += HandleConnectedAsync;
+        _mqttClient.DisconnectedAsync += HandleDisconnectedAsync;
+        _mqttClient.ApplicationMessageReceivedAsync += HandleApplicationMessageReceivedAsync;
+    }
 
-        public MqttClientService(HeliosOptions config, IMqttClientOptions options, ILogger<MqttClientService> logger)
+    public void Dispose()
+    {
+        _mqttClient.ConnectedAsync -= HandleConnectedAsync;
+        _mqttClient.DisconnectedAsync -= HandleDisconnectedAsync;
+        _mqttClient.ApplicationMessageReceivedAsync -= HandleApplicationMessageReceivedAsync;
+    }
+
+    public Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
+    {
+        var payload = Encoding.UTF8.GetString(eventArgs.ApplicationMessage.PayloadSegment);
+        _logger.LogInformation("Message received: {Payload} on Topic: {Topic}", payload, eventArgs.ApplicationMessage.Topic);
+
+        if (OperationSession.Current != null)
         {
-            this._logger = logger;
-            this._mqttOptions = options;
-            this._heliosOptions = config;
-            _mqttClient = new MqttFactory()
-                .CreateMqttClient();
-
-            ConfigureMqttClient();
+            OperationSession.Current.MessageBuffer.Add((eventArgs.ApplicationMessage.Topic, payload));
         }
 
-        private void ConfigureMqttClient()
+        return Task.CompletedTask;
+    }
+
+    public async Task HandleConnectedAsync(MqttClientConnectedEventArgs eventArgs)
+    {
+        switch (eventArgs.ConnectResult.ResultCode)
         {
-            _mqttClient.ConnectedHandler = this;
-            _mqttClient.DisconnectedHandler = this;
-            _mqttClient.ApplicationMessageReceivedHandler = this;
-        }
-
-        public Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
-        {
-            var payload = Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
-            this._logger.LogInformation($"Message received: {payload} on Topic: {eventArgs.ApplicationMessage.Topic}");
-
-            if (OperationSession.Current != null)
-            {
-                OperationSession.Current.MessageBuffer.Add((eventArgs.ApplicationMessage.Topic, payload));
-            }
-
-            return Task.CompletedTask;
-        }
-
-        public async Task HandleConnectedAsync(MqttClientConnectedEventArgs eventArgs)
-        {
-            switch (eventArgs.AuthenticateResult.ResultCode)
-            {
-                case MqttClientConnectResultCode.Success:
-                    break;
-                default:
-                    this._logger.LogError("Connection fauled: {0}", eventArgs.AuthenticateResult.ResultCode);
-                    return;
-            }
-            this._logger.LogInformation("Connected to Mqtt Server");
-
-            foreach (var topic in _heliosOptions.ListenTopics)
-            {
-                await this._mqttClient.SubscribeAsync(topic);
-            }
-        }
-
-        public async Task HandleDisconnectedAsync(MqttClientDisconnectedEventArgs eventArgs)
-        {
-            switch (eventArgs.Reason)
-            {
-                case MqttClientDisconnectReason.NotAuthorized:
-                    {
-                        throw new Exception("Disconnected due to invalid authentication", eventArgs.Exception);
-                    }
-            }
-            if (!this._shouldReconnect)
+            case MqttClientConnectResultCode.Success:
+                break;
+            default:
+                _logger.LogError("Connection failed: {ResultCode}", eventArgs.ConnectResult.ResultCode);
                 return;
-
-            // wait 5 seconds and then reconnect
-            await Task.Delay(5000);
-
-            await _mqttClient.ConnectAsync(_mqttOptions);
         }
+        _logger.LogInformation("Connected to Mqtt Server");
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        foreach (var topic in _heliosOptions.ListenTopics)
         {
-            this._shouldReconnect = true;
-            await _mqttClient.ConnectAsync(_mqttOptions, cancellationToken);
-            if (!_mqttClient.IsConnected)
-            {
-                await _mqttClient.ReconnectAsync();
-            }
+            await _mqttClient.SubscribeAsync(topic);
         }
+    }
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+    public async Task HandleDisconnectedAsync(MqttClientDisconnectedEventArgs eventArgs)
+    {
+        switch (eventArgs.Reason)
         {
-            this._shouldReconnect = false;
-            if (cancellationToken.IsCancellationRequested)
-            {
-                var disconnectOption = new MqttClientDisconnectOptions
+            case MqttClientDisconnectReason.NotAuthorized:
                 {
-                    ReasonCode = MqttClientDisconnectReason.NormalDisconnection,
-                    ReasonString = "Normal Disconnect"
-                };
-                await _mqttClient.DisconnectAsync(disconnectOption, cancellationToken);
-                return;
-            }
-            await _mqttClient.DisconnectAsync(cancellationToken);
+                    throw new Exception("Disconnected due to invalid authentication", eventArgs.Exception);
+                }
         }
+        if (!_shouldReconnect)
+            return;
 
-        protected async Task PublishMessage(string topic, string message)
+        // wait 5 seconds and then reconnect
+        await Task.Delay(5000);
+
+        await _mqttClient.ConnectAsync(_mqttOptions);
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        _shouldReconnect = true;
+        await _mqttClient.ConnectAsync(_mqttOptions, cancellationToken);
+        if (!_mqttClient.IsConnected)
         {
-            if (!_mqttClient.IsConnected)
-                await _mqttClient.ReconnectAsync();
-
-            await _mqttClient.PublishAsync(new MqttApplicationMessage()
-            {
-                Topic = topic,
-                Payload = Encoding.UTF8.GetBytes(message)
-            });
-
-            if (OperationSession.Current != null)
-            {
-                OperationSession.Current.LastSendMessage = message;
-            }
+            await _mqttClient.ReconnectAsync();
         }
+    }
 
-        public async Task<string> SetPercentage(int percentage)
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        _shouldReconnect = false;
+
+        var disconnectOption = new MqttClientDisconnectOptions
         {
-            percentage = percentage <= 0 ? 0 : percentage;
-            percentage = percentage == 0 ? 0 : Math.Min(100, Math.Max(percentage, _heliosOptions.DimmerMinimumPercentage));
+            ReasonString = "Normal Disconnect"
+        };
+        await _mqttClient.DisconnectAsync(disconnectOption, cancellationToken);
+    }
 
-            await PublishMessage(_heliosOptions.DimmerPercentageCommandTopic, percentage.ToString());
+    protected async Task PublishMessage(string topic, string message)
+    {
+        if (!_mqttClient.IsConnected)
+            await _mqttClient.ReconnectAsync();
 
-            return $"{{\"POWER\":\"ON\",\"Dimmer\":{percentage}}}";
-        }
-
-        public async Task TurnOn()
+        await _mqttClient.PublishAsync(new MqttApplicationMessage()
         {
-            await PublishMessage(_heliosOptions.DimmerOnOffCommandTopic, "{\"POWER\":\"ON\"}");
-        }
+            Topic = topic,
+            PayloadSegment = Encoding.UTF8.GetBytes(message)
+        });
 
-        public async Task TurnOff()
+        if (OperationSession.Current != null)
         {
-            await PublishMessage(_heliosOptions.DimmerOnOffCommandTopic, "{\"POWER\":\"OFF\"}");
+            OperationSession.Current.LastSendMessage = message;
         }
+    }
+
+    public async Task<string> SetPercentage(int percentage)
+    {
+        percentage = percentage <= 0 ? 0 : percentage;
+        percentage = percentage == 0 ? 0 : Math.Min(100, Math.Max(percentage, _heliosOptions.DimmerMinimumPercentage));
+
+        await PublishMessage(_heliosOptions.DimmerPercentageCommandTopic, percentage.ToString());
+
+        return $"{{\"POWER\":\"ON\",\"Dimmer\":{percentage}}}";
+    }
+
+    public async Task TurnOn()
+    {
+        await PublishMessage(_heliosOptions.DimmerOnOffCommandTopic, "{\"POWER\":\"ON\"}");
+    }
+
+    public async Task TurnOff()
+    {
+        await PublishMessage(_heliosOptions.DimmerOnOffCommandTopic, "{\"POWER\":\"OFF\"}");
     }
 }

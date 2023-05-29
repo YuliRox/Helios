@@ -9,116 +9,115 @@ using Quartz.Impl.Triggers;
 using System.Text.RegularExpressions;
 using Helios.Data;
 
-namespace Helios.Controllers
+namespace Helios.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class SchedulingController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class SchedulingController : ControllerBase
+    public ISchedulerFactory SchedulerFactory { get; }
+
+    public SchedulingController(ISchedulerFactory schedulerFactory)
     {
-        public ISchedulerFactory SchedulerFactory { get; }
+        SchedulerFactory = schedulerFactory;
+    }
 
-        public SchedulingController(ISchedulerFactory schedulerFactory)
+    // GET: api/Scheduling
+    [HttpGet("GetScheduledEvents")]
+    public async Task<IEnumerable<ScheduledEvent>> GetScheduledEvents()
+    {
+        var schedulers = await SchedulerFactory.GetAllSchedulers();
+        var scheduler = schedulers.FirstOrDefault();
+        if (scheduler == null)
+            return Enumerable.Empty<ScheduledEvent>();
+
+        //var groups = await scheduler.GetJobGroupNames();
+        var keys = await scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup());
+        var jobKey = keys.FirstOrDefault();
+        if (jobKey == null)
+            return Enumerable.Empty<ScheduledEvent>();
+
+        var triggers = await scheduler.GetTriggersOfJob(jobKey);
+
+        var scheduledEvents = triggers
+            .Where(x => x is CronTriggerImpl)
+            .Cast<CronTriggerImpl>()
+            .Select(t =>
         {
-            SchedulerFactory = schedulerFactory;
-        }
-
-        // GET: api/Scheduling
-        [HttpGet("GetScheduledEvents")]
-        public async Task<IEnumerable<ScheduledEvent>> GetScheduledEvents()
-        {
-            var schedulers = await SchedulerFactory.GetAllSchedulers();
-            var scheduler = schedulers.FirstOrDefault();
-            if (scheduler == null)
-                return Enumerable.Empty<ScheduledEvent>();
-
-            //var groups = await scheduler.GetJobGroupNames();
-            var keys = await scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup());
-            var jobKey = keys.FirstOrDefault();
-            if (jobKey == null)
-                return Enumerable.Empty<ScheduledEvent>();
-
-            var triggers = await scheduler.GetTriggersOfJob(jobKey);
-
-            var scheduledEvents = triggers
-                .Where(x => x is CronTriggerImpl)
-                .Cast<CronTriggerImpl>()
-                .Select(t =>
+            var (time, weekdays) = CronToType(t.CronExpressionString);
+            return new ScheduledEvent()
             {
-                var (time, weekdays) = CronToType(t.CronExpressionString);
-                return new ScheduledEvent()
-                {
-                    TriggerName = t.Name,
-                    JobType = t.JobName,
+                TriggerName = t.Name,
+                JobType = t.JobName,
 
-                    ActivationTime = time,
-                    DayOfWeek = weekdays,
+                ActivationTime = time,
+                DayOfWeek = weekdays,
 
-                    CronExpression = t.CronExpressionString,
-                };
-            }).ToArray();
+                CronExpression = t.CronExpressionString,
+            };
+        }).ToArray();
 
-            triggers.Where(x => x is DailyTimeIntervalTriggerImpl)
-                .Cast<DailyTimeIntervalTriggerImpl>()
-                .Select(x => new ScheduledEvent()
-                {
-                    TriggerName = x.Name,
-                    JobType = x.JobName,
+        triggers.Where(x => x is DailyTimeIntervalTriggerImpl)
+            .Cast<DailyTimeIntervalTriggerImpl>()
+            .Select(x => new ScheduledEvent()
+            {
+                TriggerName = x.Name,
+                JobType = x.JobName,
 
-                    ActivationTime = new TimeOnly(x.StartTimeOfDay.Hour, x.StartTimeOfDay.Minute, x.StartTimeOfDay.Second),
-                    DayOfWeek = x.DaysOfWeek.ToArray()
-                });
+                ActivationTime = new TimeOnly(x.StartTimeOfDay.Hour, x.StartTimeOfDay.Minute, x.StartTimeOfDay.Second),
+                DayOfWeek = x.DaysOfWeek.ToArray()
+            });
 
-            return scheduledEvents;
-        }
+        return scheduledEvents;
+    }
 
-        private Regex CronEx = new Regex(@"(?<Seconds>\d{2}) (?<Minutes>\d{2}) (?<Hours>\d{2}) ? * (?<WeekDays>.*)", RegexOptions.Compiled);
+    private Regex CronEx = new Regex(@"(?<Seconds>\d{2}) (?<Minutes>\d{2}) (?<Hours>\d{2}) ? * (?<WeekDays>.*)", RegexOptions.Compiled);
 
-        private (TimeOnly, DayOfWeek[]) CronToType(string cronExpressionString)
-        {
-            var cronParts = CronEx.Match(cronExpressionString);
+    private (TimeOnly, DayOfWeek[]) CronToType(string cronExpressionString)
+    {
+        var cronParts = CronEx.Match(cronExpressionString);
 
-            var seconds = int.Parse(cronParts.Groups["Seconds"].Value);
-            var minutes = int.Parse(cronParts.Groups["Minutes"].Value);
-            var hours = int.Parse(cronParts.Groups["Hours"].Value);
-            var time = new TimeOnly(hours, minutes, seconds);
+        var seconds = int.Parse(cronParts.Groups["Seconds"].Value);
+        var minutes = int.Parse(cronParts.Groups["Minutes"].Value);
+        var hours = int.Parse(cronParts.Groups["Hours"].Value);
+        var time = new TimeOnly(hours, minutes, seconds);
 
-            var weekDays = cronParts.Groups["WeekDays"].Value;
+        var weekDays = cronParts.Groups["WeekDays"].Value;
 
-            return (time, new[] { DayOfWeek.Monday });
-        }
+        return (time, new[] { DayOfWeek.Monday });
+    }
 
-        [HttpPost("RunNow")]
-        public async Task RunNow(string jobName)
-        {
-            var schedulers = await SchedulerFactory.GetAllSchedulers();
-            var scheduler = schedulers.FirstOrDefault();
-            if (scheduler == null)
-                return;
+    [HttpPost("RunNow")]
+    public async Task RunNow(string jobName)
+    {
+        var schedulers = await SchedulerFactory.GetAllSchedulers();
+        var scheduler = schedulers.FirstOrDefault();
+        if (scheduler == null)
+            return;
 
-            var jobKey = new JobKey(jobName);
-            await scheduler.TriggerJob(jobKey);
-        }
+        var jobKey = new JobKey(jobName);
+        await scheduler.TriggerJob(jobKey);
+    }
 
-        public async Task CreateTrigger(ScheduledEvent scheduledEventDTO)
-        {
-            
+    public async Task CreateTrigger(ScheduledEvent scheduledEventDTO)
+    {
+        
 
-            throw new NotImplementedException();
-        }
+        throw new NotImplementedException();
+    }
 
-        public async Task UpdateTrigger(ScheduledEvent scheduledEventDTO)
-        {
-            throw new NotImplementedException();
-        }
+    public async Task UpdateTrigger(ScheduledEvent scheduledEventDTO)
+    {
+        throw new NotImplementedException();
+    }
 
-        public async Task DeleteTrigger(ScheduledEvent scheduledEventDTO)
-        {
-            if (string.IsNullOrWhiteSpace(scheduledEventDTO.TriggerName))
-                throw new ArgumentException("Scheduled Event TriggerName is empty");
-            if (string.IsNullOrWhiteSpace(scheduledEventDTO.JobType))
-                throw new ArgumentException("Scheduled Event TriggerName is empty");
+    public async Task DeleteTrigger(ScheduledEvent scheduledEventDTO)
+    {
+        if (string.IsNullOrWhiteSpace(scheduledEventDTO.TriggerName))
+            throw new ArgumentException("Scheduled Event TriggerName is empty");
+        if (string.IsNullOrWhiteSpace(scheduledEventDTO.JobType))
+            throw new ArgumentException("Scheduled Event TriggerName is empty");
 
-            throw new NotImplementedException();
-        }
+        throw new NotImplementedException();
     }
 }

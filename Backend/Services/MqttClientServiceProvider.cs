@@ -1,12 +1,11 @@
-namespace Helios.Services
-{
-    public class MqttClientServiceProvider
-    {
-        public readonly IMqttClientService MqttClientService;
+namespace Helios.Services;
 
-        public MqttClientServiceProvider(IMqttClientService mqttClientService)
-        {
-            MqttClientService = mqttClientService;
-        }
+public class MqttClientServiceProvider
+{
+    public readonly IMqttClientService MqttClientService;
+
+    public MqttClientServiceProvider(IMqttClientService mqttClientService)
+    {
+        MqttClientService = mqttClientService;
     }
 }

@@ -1,50 +1,46 @@
-using System;
 using Helios.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 
-namespace Helios.Extensions
+namespace Helios.Extensions;
+
+public static class ServiceCollectionExtension
 {
-    public static class ServiceCollectionExtension
+    public static IServiceCollection AddMqttClientServiceWithConfig(
+        this IServiceCollection services,
+        Action<MqttClientOptionsBuilder> configure,
+        Action<HeliosOptions> configureOptions
+    )
     {
-        public static IServiceCollection AddMqttClientServiceWithConfig(
-            this IServiceCollection services,
-            Action<MqttClientOptionsBuilder> configure,
-            Action<HeliosOptions> configureOptions
-        )
+        services.AddSingleton<MqttClientOptions>(_ =>
         {
-            services.AddSingleton<IMqttClientOptions>(_ =>
+            var optionsBuilder = new MqttClientOptionsBuilder();
+
+            configure(optionsBuilder);
+
+            return optionsBuilder.Build();
+        });
+        services.AddSingleton<HeliosOptions>(_ =>
             {
-                var optionsBuilder = new MqttClientOptionsBuilder();
+                var options = new HeliosOptions();
 
-                configure(optionsBuilder);
+                configureOptions(options);
 
-                return optionsBuilder.Build();
-            });
-            services.AddSingleton<HeliosOptions>(_ =>
-                {
-                    var options = new HeliosOptions();
+                return options;
+            }
+        );
 
-                    configureOptions(options);
+        services.AddSingleton<MqttClientService>();
 
-                    return options;
-                }
-            );
+        services.AddSingleton<IManagedDimmer>(serviceProvider => serviceProvider.GetRequiredService<MqttClientService>());
 
-            services.AddSingleton<MqttClientService>();
+        services.AddSingleton<IHostedService>(serviceProvider => serviceProvider.GetRequiredService<MqttClientService>());
 
-            services.AddSingleton<IManagedDimmer>(serviceProvider => serviceProvider.GetService<MqttClientService>());
-
-            services.AddSingleton<IHostedService>(serviceProvider => serviceProvider.GetService<MqttClientService>());
-
-            services.AddSingleton<MqttClientServiceProvider>(serviceProvider =>
-            {
-                var mqttClientService = serviceProvider.GetService<MqttClientService>();
-                var mqttClientServiceProvider = new MqttClientServiceProvider(mqttClientService);
-                return mqttClientServiceProvider;
-            });
-            return services;
-        }
+        services.AddSingleton<MqttClientServiceProvider>(serviceProvider =>
+        {
+            var mqttClientService = serviceProvider.GetRequiredService<MqttClientService>();
+            var mqttClientServiceProvider = new MqttClientServiceProvider(mqttClientService);
+            return mqttClientServiceProvider;
+        });
+        return services;
     }
 }
