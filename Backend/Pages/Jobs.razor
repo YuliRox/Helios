@@ -14,7 +14,7 @@ else
 {
     <MudTable Items="scheduledEvents" Hover="true" SortLabel="Sort By" Elevation="0">
         <HeaderContent>
-            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ScheduledEvent, object>(x=>x.ActivationTime)">ActivationTime</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ScheduledEvent, object>(x=>x?.ActivationTime)">ActivationTime</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<ScheduledEvent, object>(x=>x.TriggerName)">TriggerName</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<ScheduledEvent, object>(x=>x.JobType)">JobType</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<ScheduledEvent, object>(x=>x.CronExpression)">Cron Expression</MudTableSortLabel></MudTh>

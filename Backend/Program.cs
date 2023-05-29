@@ -69,7 +69,6 @@ builder.Services.AddQuartzServer(options =>
     options.WaitForJobsToComplete = true;
 });
 
-builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<ScheduledEventService>();
 
 var app = builder.Build();
