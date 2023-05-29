@@ -64,7 +64,7 @@ namespace Helios
             {
                 q.SchedulerId = "JobScheduler";
                 q.SchedulerName = "Job Scheduler";
-                q.UseMicrosoftDependencyInjectionScopedJobFactory();
+                q.UseMicrosoftDependencyInjectionJobFactory();
                 q.AddJobAndTrigger<WakeUpJobV2>(Configuration);
                 q.UsePersistentStore(store =>
                 {
