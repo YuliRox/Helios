@@ -4,6 +4,7 @@ using Helios.Jobs;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using MudBlazor.Services;
 using Quartz;
+using Quartz.Impl.AdoJobStore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,7 @@ builder.Services.AddMqttClientServiceWithConfig((configBuilder) =>
     heliosOptions.DimmerTime = Configuration.GetValue<int>("Helios:DimmerTime", 20 * 60 * 1000);
 });
 
+
 builder.Services.AddQuartz(q =>
 {
     q.SchedulerId = "JobScheduler";
@@ -52,10 +54,11 @@ builder.Services.AddQuartz(q =>
         store.UseProperties = true;
         store.RetryInterval = TimeSpan.FromSeconds(15);
         store.UseJsonSerializer();
-        store.UseSQLite(sqlite =>
+        store.UsePostgres(postgresOptions =>
         {
-            sqlite.ConnectionString = Configuration.GetConnectionString("HeliosDb");
-            sqlite.TablePrefix = "QRTZ_";
+            postgresOptions.UseDriverDelegate<PostgreSQLDelegate>();
+            postgresOptions.ConnectionString = Configuration.GetConnectionString("HeliosDb");
+            postgresOptions.TablePrefix = "QRTZ_";
         });
         store.PerformSchemaValidation = true;
     });

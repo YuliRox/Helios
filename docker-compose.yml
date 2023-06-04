@@ -1,18 +1,40 @@
-version: '3.7'
 services:
   helios:
     container_name: helios
-    image: yulirox-pi:5000/helios:arm64-v1.0
-    restart: always
+    image: ${REGISTRY}/helios:latest
+    restart: unless-stopped
     volumes:
       - /home/ubuntu/Helios/appsettings.Production.json:/app/appsettings.Production.json
-      - /home/ubuntu/Helios/helios.db:/app/helios.db
+    environment:
+      - ConnectionStrings:DefaultConnection=${DB_CONNECTION}
+      - Mqtt:Username=${MQTT_USER}
+      - Mqtt:Password=${MQTT_PW}
+      - Mqtt:Server=${MQTT_SERVER}
     networks:
       - mosquitto
+      - helios
     ports:
       - 8090:80
+  database:
+    container_name: helios-db
+    image: postgres:12
+    restart: always
+    shm_size: 256MB
+    ports:
+      - 5433:5432
+    networks:
+      - helios
+    volumes:
+      - /opt/helios/postgres:/var/lib/postgresql/data
+      - /opt/helios/tables_postgres.sql:/docker-entrypoint-initdb.d/tables_postgres.sql
+    environment:
+      - POSTGRES_PASSWORD=${PG_SUPERUSER_PW} # Password for the database user using postgres.
+      - POSTGRES_DB=${PG_DB}                 # Name of the database using postgres.
+      - POSTGRES_USER=${PG_USER}             # Username for the database using postgres.
 
 networks:
   mosquitto:
-    external:
-      name: mosquitto
+    name: mosquitto
+    external: true
+  helios:
+    name: helios
