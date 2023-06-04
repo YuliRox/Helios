@@ -1,10 +1,11 @@
 # https://hub.docker.com/_/microsoft-dotnet
 ARG BASE_IMAGE_ARCH=""
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-bullseye-slim$BASE_IMAGE_ARCH AS base
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim$BASE_IMAGE_ARCH AS base
 EXPOSE 80
+RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev
 
 # Dotnet is platform agnostic anyway so only the dotnet RUNTIME needs to be arm
-FROM mcr.microsoft.com/dotnet/sdk:7.0-bullseye-slim-amd64 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim-amd64 AS build
 WORKDIR /build
 
 # copy csproj and restore as distinct layers
