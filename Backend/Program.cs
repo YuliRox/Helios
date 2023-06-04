@@ -57,7 +57,7 @@ builder.Services.AddQuartz(q =>
             sqlite.ConnectionString = Configuration.GetConnectionString("HeliosDb");
             sqlite.TablePrefix = "QRTZ_";
         });
-
+        store.PerformSchemaValidation = true;
     });
 });
 

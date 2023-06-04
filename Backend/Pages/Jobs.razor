@@ -12,27 +12,46 @@
 }
 else
 {
-    <MudTable Items="scheduledEvents" Hover="true" SortLabel="Sort By" Elevation="0">
-        <HeaderContent>
-            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ScheduledEvent, object>(x=>x?.ActivationTime)">ActivationTime</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ScheduledEvent, object>(x=>x?.DeactivationTime)">DeactivationTime</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<ScheduledEvent, object>(x=>x.GroupName)">Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<ScheduledEvent, object>(x=>x.CronExpressionOn)">Cron for On</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<ScheduledEvent, object>(x=>x.CronExpressionOff)">Cron for Off</MudTableSortLabel></MudTh>
-            <MudTh>Day of Week</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Activation Time">@context.ActivationTime</MudTd>
-            <MudTd DataLabel="Deactivation Time">@context.DeactivationTime</MudTd>
-            <MudTd DataLabel="Name">@context.GroupName</MudTd>
-            <MudTd DataLabel="CronExpressionOn">@context.CronExpressionOn</MudTd>
-            <MudTd DataLabel="CronExpressionOff">@context.CronExpressionOff</MudTd>
-            <MudTd DataLabel="Day of Week">@string.Join(", ", @context.DayOfWeek)</MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager PageSizeOptions="new int[]{50, 100}" />
-        </PagerContent>
-    </MudTable>
+    <MudStack>
+        @foreach (var scheduledEvent in scheduledEvents)
+        {
+            <MudItem>
+                <MudCard Outlined="true">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">@scheduledEvent.GroupName</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudSwitch T="bool" CheckedChanged="(value) => Toggle(value, scheduledEvent)" Checked="scheduledEvent.IsActive" Color="Color.Secondary" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <!--<MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+                    </MudCardActions>-->
+                    <MudCardContent>
+                        <MudGrid>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudField Label="Activation Time" AdornmentIcon="@Icons.Material.Filled.WbSunny" AdornmentColor="Color.Warning" Adornment="Adornment.End">
+                                    <InputDate TValue="TimeOnly" Type="InputDateType.Time"
+                                               ValueChanged="(newValue) => ActivationTimeChanged(newValue, scheduledEvent)"
+                                               ValueExpression="() => scheduledEvent.ActivationTime"
+                                               Value="scheduledEvent.ActivationTime" />
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudField Label="Deactivation Time" AdornmentIcon="@Icons.Material.Filled.NightsStay" AdornmentColor="Color.Dark" Adornment="Adornment.End">
+                                    <InputDate TValue="TimeOnly" Type="InputDateType.Time"
+                                               ValueChanged="(newValue) => DeactivationTimeChanged(newValue, scheduledEvent)"
+                                               ValueExpression="() => scheduledEvent.DeactivationTime"
+                                               Value="scheduledEvent.DeactivationTime" />
+                                </MudField>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudStack>
 }
 
 @code {
@@ -41,5 +60,34 @@ else
     protected override async Task OnInitializedAsync()
     {
         scheduledEvents = await ScheduledEventService.GetScheduledAsync();
+    }
+
+    public async Task Toggle(bool newValue, ScheduledEvent evt)
+    {
+        await ScheduledEventService.TogglePauseStatus(evt);
+        if (evt.IsActive != newValue)
+        {
+            Console.Error.WriteLine($"Active value is not the same for {evt.GroupName}");
+        }
+    }
+
+    public async Task ActivationTimeChanged(TimeOnly newTime, ScheduledEvent evt)
+    {
+        if (newTime >= evt.DeactivationTime)
+            evt.DeactivationTime = newTime.AddMinutes(30);
+
+        evt.ActivationTime = newTime;
+
+        await ScheduledEventService.UpdateTimes(evt);
+    }
+
+    public async Task DeactivationTimeChanged(TimeOnly newTime, ScheduledEvent evt)
+    {
+        if (newTime <= evt.ActivationTime)
+            evt.ActivationTime = newTime.AddMinutes(-30);
+
+        evt.DeactivationTime = newTime;
+
+        await ScheduledEventService.UpdateTimes(evt);
     }
 }
