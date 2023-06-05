@@ -31,8 +31,10 @@ public class ScheduledEventService
             if (triggerKeys == null || !triggerKeys.Any() || triggerKeys.Count != 2)
                 continue;
 
-            var triggers = triggerKeys
-                .Select(triggerKey => scheduler.GetTrigger(triggerKey).Result)
+            var triggerInstances = triggerKeys.Select(tk => scheduler.GetTrigger(tk)).ToArray();
+            var triggersAll = await Task.WhenAll(triggerInstances);
+
+            var triggers = triggersAll
                 .Where(x => x is CronTriggerImpl)
                 .Cast<CronTriggerImpl>()
                 .ToArray();
